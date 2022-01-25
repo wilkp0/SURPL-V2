@@ -4,6 +4,7 @@ from multiagent.scenario import BaseScenario
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
+
 class Scenario(BaseScenario):
     def __init__(self):
         self.day_reward = True

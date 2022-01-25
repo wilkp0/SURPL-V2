@@ -7,14 +7,15 @@ but that seems unlikely considering how the different policies interact
 from gym.spaces import Discrete, Box
 from stable_baselines3 import PPO
 from gym import spaces, Env
-spaces.Discrete()
+spaces.Discrete(2)
 
 
 
 class Charging_Station_Env(Env):
-    def __init__(self) -> None:
-        super().__init_()
+    def __init__(self):
+        # super().__init_()
         self.reset()
+        self.time = 3
         self.action_space = Box(0,self.required, (1,), float)
         self.observation_space = Box(0, 25, (1,), float)
         pass
@@ -25,14 +26,12 @@ class Charging_Station_Env(Env):
         reward -= (self.load**2)
         
         return reward
-        pass
 
     def done(self):
         if self.time >= 2:
             return True
         else:
             return False
-        pass
 
     def step(self, action):
         self.time_step += 1
@@ -58,9 +57,12 @@ class Charging_Station_Env(Env):
 
 
 class Smart_Building_Environment(Env):
-    def __init__(self) -> None:
-        super().__init_()
+    def __init__(self):
+        # super().__init_()
         self.reset()
+        # self.demand = [4, 5, 7]
+        self.demand = [1, 1, 0]
+        self.time = 3
         self.action_space = Box(0,max(self.demand), (1,), float)
         self.observation_space = Box(0, 25, (1,), float)
         pass
@@ -71,14 +73,12 @@ class Smart_Building_Environment(Env):
         reward -= (self.load**2)
         
         return reward
-        pass
 
     def done(self):
         if self.time >= 2:
             return True
         else:
             return False
-        pass
 
     def step(self, action):
         self.time_step += 1
@@ -111,7 +111,6 @@ class dual_environment(Env):
         reward -= (self.load**2)
         
         return reward
-        pass
 
     def done(self):
         if self.time >= 2:
