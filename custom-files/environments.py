@@ -6,16 +6,17 @@ but that seems unlikely considering how the different policies interact
 
 from gym.spaces import Discrete, Box
 from stable_baselines3 import PPO
-from gym import spaces, Env
-# spaces.Discrete(3)
+from gym import spaces, Env, Wrapper
 
-class Charging_Station_Env(Env):
+class ChargingStation(Env):
     def __init__(self):
         # super().__init_()
+        # spaces.Discrete(3)
         self.reset()
         self.time = 3
-        self.action_space = Box(0,self.required, (1,), float)
-        self.observation_space = Box(0, 25, (1,), float)
+        # self.action_space = spaces.Discrete(3)
+        self.action_space = Box(low=0, high=self.required, shape=(1,), dtype=float)
+        self.observation_space = Box(low=0, high=25, shape=(1,), dtype=float)
         pass
 
     def reward(self):
@@ -42,23 +43,30 @@ class Charging_Station_Env(Env):
         reward = self.reward()
         done = self.done()
         
+        # observation, reward, done = self.Env.step(action)
+        
         return observation, reward, done, {}
+    
+    def _take_action(self, action):
+        pass
 
     def reset(self):
         self.time_step = 0
         self.required = 2
         self.load = 0
-        
         return 0
+    
+    def render(self, mode="human", close=False):
+        pass
 
 
-class Smart_Building_Environment(Env):
+class SmartBuilding(Env):
     def __init__(self):
         # super().__init_()
         self.reset()
-        # self.demand = [4, 5, 7]
         self.demand = [1, 1, 0]
         self.time = 3
+        # self.action_space = spaces.Discrete(3)
         self.action_space = Box(0,max(self.demand), (1,), float)
         self.observation_space = Box(0, 25, (1,), float)
         pass
@@ -92,13 +100,16 @@ class Smart_Building_Environment(Env):
         # self.demands = [1.5, .5, .5]
         self.load = 0   
         return 0
+    
+    def render(self, mode="human", close=False):
+        pass
 
 
 class dual_environment(Env):
     def __init__(self) -> None:
         super().__init_()
         self.reset()
-        self.action_space = Box(0,max(self.demand), (2,), float)
+        self.action_space = Box(0, max(self.demand), (2,), float)
         self.observation_space = Box(0, 25, (2,), float)
         pass
 
@@ -131,3 +142,6 @@ class dual_environment(Env):
         self.demands = [3, 1, 1]
         self.load = 0   
         return 0
+    
+    def render(self, mode="human", close=False):
+        pass
