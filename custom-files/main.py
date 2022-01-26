@@ -8,9 +8,8 @@ def test(model_SBE, model_CSE):
 
 def main():
     
-    batch_size = 100
-    ep_per_batch = 100
-
+    batch_size = 5
+    ep_per_batch = 5
     print("Loading agents...")
     SBE = Smart_Building_Environment()
     CSE = Charging_Station_Env()

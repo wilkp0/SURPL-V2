@@ -7,9 +7,7 @@ but that seems unlikely considering how the different policies interact
 from gym.spaces import Discrete, Box
 from stable_baselines3 import PPO
 from gym import spaces, Env
-spaces.Discrete(2)
-
-
+# spaces.Discrete(3)
 
 class Charging_Station_Env(Env):
     def __init__(self):
@@ -46,14 +44,12 @@ class Charging_Station_Env(Env):
         
         return observation, reward, done, {}
 
-
     def reset(self):
         self.time_step = 0
         self.required = 2
         self.load = 0
         
         return 0
-
 
 
 class Smart_Building_Environment(Env):
@@ -92,7 +88,8 @@ class Smart_Building_Environment(Env):
 
     def reset(self):
         self.time_step = 0
-        self.demands = [3,1,1]
+        self.demands = [3, 1, 1]
+        # self.demands = [1.5, .5, .5]
         self.load = 0   
         return 0
 
@@ -131,6 +128,6 @@ class dual_environment(Env):
 
     def reset(self):
         self.time_step = 0
-        self.demands = [3,1,1]
+        self.demands = [3, 1, 1]
         self.load = 0   
         return 0
