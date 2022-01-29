@@ -67,7 +67,7 @@ class SmartBuilding(Env):
         self.demand = [1, 1, 0]
         self.time = 3
         # self.action_space = spaces.Discrete(3)
-        self.action_space = Box(0,max(self.demand), (1,), float)
+        self.action_space = Box(0, max(self.demand), (1,), float)
         self.observation_space = Box(0, 25, (1,), float)
         pass
 
@@ -125,7 +125,6 @@ class dual_environment(Env):
             return True
         else:
             return False
-        pass
 
     def step(self, actions):
         self.time_step += 1

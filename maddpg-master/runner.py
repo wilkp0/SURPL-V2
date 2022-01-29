@@ -18,7 +18,9 @@ class Runner:
         self.env = env
         self.agents = self._init_agents()
         self.buffer = Buffer(args)
-        self.save_path = self.args.save_dir + '/' + self.args.scenario_name
+        # print(os.getcwd())
+        # self.save_path = self.args.save_dir + '/' + self.args.scenario_name
+        self.save_path = "/Users/jordan/ThesisMARL/SURPL-V2/results/" + self.args.scenario_name
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
 
@@ -33,6 +35,7 @@ class Runner:
         returns = []
         self.args.evaluate_rate=3*30
         self.args.time_steps = 3*30000
+        # self.args.time_steps = 300
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
             # reset the environment
