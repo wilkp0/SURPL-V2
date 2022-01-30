@@ -20,5 +20,6 @@ for episodeCount in range(max_ep):
         state  = observation
         
     print("Episode: {}, Step Count: {}, Episode Reward: {}".format(episodeCount, stepCount, epReward))
+    print()
 
 env.close()
