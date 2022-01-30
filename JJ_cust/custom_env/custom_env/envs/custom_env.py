@@ -72,7 +72,7 @@ class SmartBuildingEnv(Env):
     
     def render(self, mode="human"):
         screen_h = 600
-        screen_w = 400
+        screen_w = 1000
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h)
             
