@@ -8,7 +8,7 @@ from gym.spaces import Discrete, Box
 from stable_baselines3 import PPO
 from gym import spaces, Env, Wrapper
 
-class ChargingStation(Env):
+class ChargingStation_Env(Env):
     def __init__(self):
         # super().__init_()
         # spaces.Discrete(3)
@@ -60,7 +60,7 @@ class ChargingStation(Env):
         pass
 
 
-class SmartBuilding(Env):
+class SmartBuilding_Env(Env):
     def __init__(self):
         # super().__init_()
         self.reset()
