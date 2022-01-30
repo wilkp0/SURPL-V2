@@ -1,9 +1,11 @@
+from time import time
 from tqdm import tqdm
 from agent import Agent
 from common.replay_buffer import Buffer
 import torch
 import os
 import numpy as np
+from datetime import datetime, date
 import matplotlib
 matplotlib.use('Agg')      #Resource exhaustion, speed up using (Agg>>TkAgg)
 import matplotlib.pyplot as plt
@@ -20,7 +22,10 @@ class Runner:
         self.buffer = Buffer(args)
         # print(os.getcwd())
         # self.save_path = self.args.save_dir + '/' + self.args.scenario_name
-        self.save_path = "/Users/jordan/ThesisMARL/SURPL-V2/results/" + self.args.scenario_name
+        # DYNAMIC DAY
+        now = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        
+        self.save_path = "/Users/jordan/ThesisMARL/SURPL-V2/results/" + now + "/" + self.args.scenario_name
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
 
