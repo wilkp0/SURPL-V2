@@ -3,7 +3,7 @@ import custom_env
 
 env =  gym.make("SmartBuilding_single-v0")
 
-max_ep = 10
+max_ep = 10000
 
 for episodeCount in range(max_ep):
     stepCount = 0 
@@ -14,7 +14,7 @@ for episodeCount in range(max_ep):
     while not done: 
         observation, reward, done, _ = env.step(env.action_space.sample())
         # nextState, reward, done, _ = env.step()
-        # env.render()
+        env.render()
         stepCount += 1
         epReward +=  reward 
         state  = observation

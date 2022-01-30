@@ -70,11 +70,13 @@ class SmartBuildingEnv(Env):
         
         return observation, reward, done, info
     
-    def render(self):
+    def render(self, mode="human"):
         screen_h = 600
         screen_w = 400
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h)
+            
+        return self.viewer.render(return_rgb_array=mode == "rgb_array")
     
     def close(self):
         if self.viewer:
@@ -130,11 +132,13 @@ class ChargingStationEnv(Env):
         
         return observation, reward, done, info
     
-    def render(self):
+    def render(self, mode="human"):
         screen_h = 600
         screen_w = 400
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h)
+            
+        return self.viewer.render(return_rgb_array=mode == "rgb_array")
     
     def close(self):
         if self.viewer:
