@@ -53,10 +53,10 @@ class SmartBuildingEnv(Env):
 
             # print(action)
             # self.deltaUtilization = 0
-            self.load = action[0]
             self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
             self.penalty = (self.deltaUtilization) ** 2
             
+            self.load = action[0]
             observation = self.demand[self.timeStep]
             print("Penalty: ", round(self.penalty, 2))
             print("Delta ", round(self.deltaUtilization, 2))
