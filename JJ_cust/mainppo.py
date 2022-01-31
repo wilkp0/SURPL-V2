@@ -33,7 +33,7 @@ for i in range(batch_size):
     for model in models:
         model.learn(total_timesteps=ep_per_batch)
         obs = env.reset()
-        action, _ = model.predict(obs, deterministic=True)
+        # action, _ = model.predict(obs, deterministic=True)
 
 
 env.close()

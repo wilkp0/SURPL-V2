@@ -132,21 +132,36 @@ class ChargingStationEnv(Env):
     def step(self, action):
         info = {}
         reward = 0
-        done: bool
+        done: bool = False
+        self.load = action[0]
         
-        print("EV Stepping... ", self.timeStep)
-        print("EV Stepping... ", self.timeStep, file=fileOut)
+        print("EV Stepping... ", round(action[0], 2))
+        print("*"*25)
+        print("*"*25)
+        print("EV Stepping... ", round(action[0], 2), file=fileOut)
+        print("*"*25, file=fileOut)
+        print("*"*25, file=fileOut)
+               
         
-        done is True if self.timeStep > 2 else done is False
-        
-        self.timeStep += 1
         while not done:
+            print("Timestep: ", self.timeStep)
+            print("-"*5)
+            print("Load: ", round(self.load, 2))
+            print("Required: ", self.required[self.timeStep])
+            print("Timestep: ", self.timeStep, file=fileOut)
+            print("-"*5, file=fileOut)
+            print("Load: ", round(self.load, 2), file=fileOut)
+            print("Required: ", self.required[self.timeStep], file=fileOut)
             
-            self.load = action
             observation = self.required[self.timeStep] 
+            
+            print("-"*25)
+            print("-"*25, file=fileOut)
             
             # reward -= (self.required) ** 2
             reward -= self.load
+            self.timeStep += 1
+            done = True if self.timeStep > 2 else done
             
         
         return observation, reward, done, info
