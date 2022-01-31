@@ -1,5 +1,13 @@
 import gym 
 import custom_env
+from datetime import datetime
+from stable_baselines3 import PPO
+from stable_baselines3.common.monitor import Monitor
+
+now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust"
+fileOut = open(sourceDir + "/results/PPO.txt", "w+")
+
 
 env =  gym.make("SmartBuilding_single-v0")
 
@@ -21,5 +29,7 @@ for episodeCount in range(max_ep):
         
     print("Episode: {}, Step Count: {}, Episode Reward: {}".format(episodeCount, stepCount, epReward))
     print()
+    print("Episode: {}, Step Count: {}, Episode Reward: {}".format(episodeCount, stepCount, epReward), file=fileOut)
+    print(file=fileOut)
 
 env.close()

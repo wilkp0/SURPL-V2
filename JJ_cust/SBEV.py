@@ -4,7 +4,7 @@ from gym.envs.classic_control import rendering
 from datetime import datetime
 # global golbalTime 
 
-now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+# now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust"
 fileOut = open(sourceDir + "/results/PPO.txt", "w+")
 # fileOut = open(sourceDir + "/results/" + now + "/PPO", "w+")
@@ -44,6 +44,7 @@ class SmartBuildingEnv(Env):
         info = {}
         reward = 0
         done:bool = False
+        self.load = action[0]
         
         print("Stepping action: ", round(action[0], 2))
         print("*"*25)
@@ -69,7 +70,7 @@ class SmartBuildingEnv(Env):
             self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
             self.penalty = (self.deltaUtilization) ** 2
             
-            self.load = action[0]
+            # self.load = action[0]
             observation = self.demand[self.timeStep]
             print("Penalty: ", round(self.penalty, 2))
             print("Delta ", round(self.deltaUtilization, 2))
@@ -120,7 +121,7 @@ class ChargingStationEnv(Env):
         # self.time = 0
         self.timeStep = 0
         self.required = [1, 1, 0]
-        self.load = max(sum([l for l in self.required[self.timeStep]])[0], 0)
+        self.load = max(sum([l for l in self.required]), 0)
         self.action_space = Box(low=0, high=self.load, shape=(1,), dtype=float)
         self.observation_space = Box(low=0, high=self.required[self.timeStep], shape=(1,), dtype=float)
         
