@@ -190,6 +190,7 @@ class ChargingStationEnv(Env):
         
         # REWARD ONLY NEEDS TO MAKE SURE REQUIRED ENERGY IS CHARGED IN A FLAT ENERGY CHARGE DISTRIBUTION DUE TO PRICE FOR NOW
         # MEET DEADLINE BY REQUIRED CHARGING AMOUNT (REQUIRED -> TOTAL ENERGY)
+        # CAN STOP AND RESTART MODEL PER 24 HOURS FOR NOW -> CONVOLUTION (SLIDING WINDOW)
         if self.timeStep >= self.required and sum([i for i in self.load]) < self.required:
             reward = -10
         # PROBABLY CAN'T HAPPEN BECAUSE CONSTRAINT
