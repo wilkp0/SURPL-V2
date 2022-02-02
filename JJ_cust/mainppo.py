@@ -62,7 +62,6 @@ for model, env, nm in zip(models, envs, modelNames):
     
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=100)
     print(f"mean_reward:{mean_reward:.2f} +/- {std_reward:.2f}")
-    print(f"mean_reward:{mean_reward:.2f} +/- {std_reward:.2f}")
     time.sleep(10)
     model.save("results/PPO_" + nm)
     obs = env.reset() 

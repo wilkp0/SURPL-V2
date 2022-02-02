@@ -3,6 +3,7 @@ from gym import Env
 from gym.spaces import Discrete, Box
 from gym.envs.classic_control import rendering
 from datetime import datetime
+import numpy as np
 # global golbalTime 
 
 now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
@@ -27,8 +28,9 @@ class SmartBuildingEnv(Env):
         
     def reset(self):
         # self.load = 0
-        # self.demand = [3, 1, 1]
-        self.demand = [3, 2, 1]
+        self.demand = [3, 1, 1]
+        # self.demand = np.array([3,1,1])
+        # self.demand = [3, 2, 1]
         # self.timeStep +=1 == self.demand[self.timeStep]
         self.timeStep = 0
         self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
@@ -77,11 +79,15 @@ class SmartBuildingEnv(Env):
         print("Observation: ", observation, file=fileOut)
         print("-"*25, file=fileOut)
         
+        # STILL NEED PEAK DEMAND IN REWARD
+        # HOW DO WE CONTRIBUTE TO THIS REWARD?
         reward = 0
         if self.load != 0:
             reward -= self.load + self.penalty
         else:
             reward -= self.load + 1 + self.penalty
+            
+        # REWARD CAN BE DIFFERENCE BETWEEN COSTS
 
         self.timeStep += 1
         done = True if self.timeStep > 2 else done
@@ -114,6 +120,7 @@ class ChargingStationEnv(Env):
         self.required = 2
         self.timeStep = 0
         self.chargingDeadline = 0
+        self.demandCharge = 0
         # self.time = 0
         # self.reward = 0
         self.action_space = None
@@ -125,6 +132,7 @@ class ChargingStationEnv(Env):
         self.timeStep = 0
         # self.required = [1, 1, 0]
         self.load = []
+        
         self.required = 2
         # self.chargingDeadline = len(self.required) - 1
         # self.chargingDeadline = len(self.required) - 1
@@ -180,6 +188,8 @@ class ChargingStationEnv(Env):
         
         # reward -= self.load
         
+        # REWARD ONLY NEEDS TO MAKE SURE REQUIRED ENERGY IS CHARGED IN A FLAT ENERGY CHARGE DISTRIBUTION DUE TO PRICE FOR NOW
+        # MEET DEADLINE BY REQUIRED CHARGING AMOUNT (REQUIRED -> TOTAL ENERGY)
         if self.timeStep >= self.required and sum([i for i in self.load]) < self.required:
             reward = -10
         # PROBABLY CAN'T HAPPEN BECAUSE CONSTRAINT
