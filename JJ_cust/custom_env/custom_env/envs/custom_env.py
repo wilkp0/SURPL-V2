@@ -28,6 +28,7 @@ class SmartBuildingEnv(Env):
         
     def reset(self):
         # self.load = 0
+        # MOVE TO 24 HOURS FOR INITAL RESULTS NOW THAT PRELIM RESULTS ESTABLISHED
         self.demand = [3, 1, 1]
         # self.demand = np.array([3,1,1])
         # self.demand = [3, 2, 1]
@@ -36,6 +37,7 @@ class SmartBuildingEnv(Env):
         self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
         self.penalty = (self.deltaUtilization) ** 2
         self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype=float)
+        # OBSERVATION SPACE CAN ALSO INCLUDE DEMAND CHARGE, TIME, ETC -> 1 INSUFFICIENT FOR MORE RESULTS
         self.observation_space = Box(low=0, high=max([self.deltaUtilization]), shape=(1,), dtype=float)
         return 0 
         # pass
