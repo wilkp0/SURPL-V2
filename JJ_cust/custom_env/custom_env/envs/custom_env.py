@@ -18,8 +18,6 @@ class SmartBuildingEnv(Env):
         self.demand = []
         self.load = 0
         self.timeStep = 0
-        # self.time = 0
-        # self.reward = 0
         self.deltaUtilization = 0
         self.penalty = 0
         self.action_space = None
@@ -27,14 +25,14 @@ class SmartBuildingEnv(Env):
         self.reset()
         
     def reset(self):
-        # self.time = 0
-        self.load = 0
-        self.demand = [3, 1, 1]
+        # self.load = 0
+        # self.demand = [3, 1, 1]
+        self.demand = [3, 2, 1]
         # self.timeStep +=1 == self.demand[self.timeStep]
         self.timeStep = 0
         self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
         self.penalty = (self.deltaUtilization) ** 2
-        self.action_space = Box(low=0, high=max(self.demand), shape=(1,), dtype=float)
+        self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype=float)
         self.observation_space = Box(low=0, high=max([self.deltaUtilization]), shape=(1,), dtype=float)
         return 0 
         # pass
@@ -44,7 +42,8 @@ class SmartBuildingEnv(Env):
         info = {}
         reward = 0
         done:bool = False
-        
+        self.load = action[0]
+
         print("Stepping action: ", round(action[0], 2))
         print("*"*25)
         print("*"*25)
@@ -54,35 +53,42 @@ class SmartBuildingEnv(Env):
         
         
         # self.timeStep += 1
-        while not done:
-            print("Timestep: ", self.timeStep)
-            print("-"*5)
-            print("Load: ", round(self.load, 2))
-            print("Demand: ", self.demand[self.timeStep])
-            print("Timestep: ", self.timeStep, file=fileOut)
-            print("-"*5, file=fileOut)
-            print("Load: ", round(self.load, 2), file=fileOut)
-            print("Demand: ", self.demand[self.timeStep], file=fileOut)
+        # while not done:
+        # print("A: ", action)
+        # print("A: ", action, file=fileOut)
+        print("Timestep: ", self.timeStep)
+        print("-"*5)
+        print("Load: ", round(self.load, 2))
+        print("Demand: ", self.demand[self.timeStep])
+        print("Timestep: ", self.timeStep, file=fileOut)
+        print("-"*5, file=fileOut)
+        print("Load: ", round(self.load, 2), file=fileOut)
+        print("Demand: ", self.demand[self.timeStep], file=fileOut)
 
-            # print(action)
-            # self.deltaUtilization = 0
-            self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
-            self.penalty = (self.deltaUtilization) ** 2
-            
-            self.load = action[0]
-            observation = self.demand[self.timeStep]
-            print("Penalty: ", round(self.penalty, 2))
-            print("Delta ", round(self.deltaUtilization, 2))
-            print("Observation: ", observation)
-            print("-"*25)
-            print("Penalty: ", round(self.penalty, 2), file=fileOut)
-            print("Delta ", round(self.deltaUtilization, 2), file=fileOut)
-            print("Observation: ", observation, file=fileOut)
-            print("-"*25, file=fileOut)
-            
+        # print(action)
+        # self.deltaUtilization = 0
+        self.deltaUtilization = abs(self.demand[self.timeStep] - self.load)
+        self.penalty = (self.deltaUtilization) ** 2
+        
+        # self.load = action[0]
+        observation = self.demand[self.timeStep]
+        print("Penalty: ", round(self.penalty, 2))
+        print("Delta ", round(self.deltaUtilization, 2))
+        print("Observation: ", observation)
+        print("-"*25)
+        print("Penalty: ", round(self.penalty, 2), file=fileOut)
+        print("Delta ", round(self.deltaUtilization, 2), file=fileOut)
+        print("Observation: ", observation, file=fileOut)
+        print("-"*25, file=fileOut)
+        
+        reward = 0
+        if self.load != 0:
             reward -= self.load + self.penalty
-            self.timeStep += 1
-            done = True if self.timeStep > 2 else done
+        else:
+            reward -= self.load + 1 + self.penalty
+        # reward -= self.load + self.penalty if self.load != 0 else self.load + 1 + self.penalty
+        self.timeStep += 1
+        done = True if self.timeStep > 2 else done
             
         
         return observation, reward, done, info
