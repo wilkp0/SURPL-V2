@@ -201,6 +201,10 @@ class ChargingStationEnv(Env):
         elif self.timeStep <= self.required:
             reward -= self.load[self.timeStep]
             
+        #DOES NOT ACTUALLY CONVERGE BASED ON PREVIOUS EPOCH'S REWARD; 
+        #   -> INSTEAD, REWARD IS TOO RANDOM AT BEGINNING OF EACH EPOCH SO THE 
+        #       AGENT NEVER LEARNS THE PROPER POLICY
+            
         self.timeStep += 1
         done = True if self.timeStep > 2 else done
         
