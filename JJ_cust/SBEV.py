@@ -166,7 +166,8 @@ class ChargingStationEnv(Env):
         # self.chargingDeadline = len(self.required) - 1
         # print("Charging deadline: ", self.chargingDeadline, file=fileOut)
         # self.load = sum([l for l in self.required])
-        self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
+        # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
+        self.action_space = Box(low=0, high=1, shape=(1,), dtype=float)
         # INCREASE OBSERVATION SPACE IF TRAIN LOSS CURVE IS UNIMPRESSIVE
         self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
     
@@ -182,6 +183,7 @@ class ChargingStationEnv(Env):
         self.load.append(action[0])
         # self.load = action[0]
         self.demandCharge = max(self.load)
+        self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
         
         
         print("EV stepping: ", round(self.load[self.timeStep], 2))
