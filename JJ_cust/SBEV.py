@@ -34,7 +34,8 @@ class SmartBuildingEnv(Env):
         # MOVE TO 24 HOURS FOR INITAL RESULTS NOW THAT PRELIM RESULTS ESTABLISHED
         self.demand = [3, 1, 1]
         self.load = []
-        self.timeWindow = len(self.demand) - 1
+        self.timeWindow = 2
+        # self.timeWindow = len(self.demand) - 1
         self.timeStep = 0
         self.totalReward = 0
         # self.deltaUtilization = abs(self.demand[self.timeStep] - self.load[self.timeStep])
@@ -167,6 +168,7 @@ class ChargingStationEnv(Env):
         # print("Charging deadline: ", self.chargingDeadline, file=fileOut)
         # self.load = sum([l for l in self.required])
         # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
+        # self.action_space = Box(low=0, high=self.required, shape=(1,), dtype=float)
         self.action_space = Box(low=0, high=1, shape=(1,), dtype=float)
         # INCREASE OBSERVATION SPACE IF TRAIN LOSS CURVE IS UNIMPRESSIVE
         self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
@@ -239,8 +241,8 @@ class ChargingStationEnv(Env):
             
         self.timeStep += 1
         self.totalReward += reward
-        done = True if self.timeStep > 2 else done
-        # done = True if self.timeStep > 2 or sum([i for i in self.load]) == self.required else done
+        # done = True if self.timeStep > self.required else done
+        done = True if self.timeStep > self.required or sum([i for i in self.load]) == self.required else done
         
         print("Total Reward: ", round(self.totalReward, 2))
         print("-"*25)
