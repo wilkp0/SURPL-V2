@@ -11,6 +11,10 @@ sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust"
 fileOut = open(sourceDir + "/results/PPO.txt", "w+")
 # fileOut = open(sourceDir + "/results/" + now + "/PPO", "w+")
 
+
+
+
+
 # ------------------------------
 #       SMART BUILDING
 # ------------------------------
@@ -185,7 +189,7 @@ class ChargingStationEnv(Env):
         self.load.append(action[0])
         # self.load = action[0]
         self.demandCharge = max(self.load)
-        self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
+        # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
         
         
         print("EV stepping: ", round(self.load[self.timeStep], 2))
@@ -227,7 +231,7 @@ class ChargingStationEnv(Env):
         
         
         if self.timeStep == self.chargingDeadline and sum([i for i in self.load]) < self.required:
-            reward = -10
+            reward += 10
             
         elif self.timeStep < self.chargingDeadline:
             reward -= self.load[self.timeStep]
@@ -241,8 +245,8 @@ class ChargingStationEnv(Env):
             
         self.timeStep += 1
         self.totalReward += reward
-        # done = True if self.timeStep > self.required else done
-        done = True if self.timeStep > self.required or sum([i for i in self.load]) == self.required else done
+        done = True if self.timeStep > self.chargingDeadline else done
+        # done = True if self.timeStep > self.required or sum([i for i in self.load]) == self.required else done
         
         print("Total Reward: ", round(self.totalReward, 2))
         print("-"*25)
