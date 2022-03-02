@@ -41,10 +41,10 @@ if os.path.exists(tbLogs):
 # env1 =  make_vec_env("SmartBuilding_single-v0", n_envs=1)
 # env2 =  make_vec_env("ChargingStation_single-v0", n_envs=1)
 
-batch_size = 1000
-ep_per_batch = 50 * batch_size
-# batch_size = 3000
+# batch_size = 1000
 # ep_per_batch = 50 * batch_size
+batch_size = 2000
+ep_per_batch = 50 * batch_size
 
 print("Loading agents... ")
 
@@ -86,7 +86,7 @@ for model, env, nm in zip(models, envs, modelNames):
     for i in range(batch_size):
         action, _states = model.predict(obs, deterministic=True)
         
-        action = np.clip(action, env.action_space.low, env.action_space.high)
+        # action = np.clip(action, env.action_space.low, env.action_space.high)
         
         obs, reward, done, info = env.step(action)
         # if ep_per_batch % 2000 == 0:

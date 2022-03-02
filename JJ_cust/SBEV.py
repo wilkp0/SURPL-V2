@@ -13,8 +13,6 @@ fileOut = open(sourceDir + "/results/PPO.txt", "w+")
 
 
 
-
-
 # ------------------------------
 #       SMART BUILDING
 # ------------------------------
@@ -47,9 +45,10 @@ class SmartBuildingEnv(Env):
         self.penalty = (self.deltaUtilization) ** 2
         self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype=float)
         # OBSERVATION SPACE CAN ALSO INCLUDE DEMAND CHARGE, TIME, ETC -> 1 INSUFFICIENT FOR MORE RESULTS
-        self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.deltaUtilization, self.timeWindow]), shape=(2,), dtype=float)
+        # self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.deltaUtilization, self.timeWindow]), shape=(2,), dtype=float)
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, self.demand[self.timeStep], self.timeWindow]), shape=(3,), dtype=float)
         # return np.array(0)
-        return np.array([0, 0])
+        return np.array([0, 0, 0])
         # pass
         # return state
     
@@ -57,6 +56,7 @@ class SmartBuildingEnv(Env):
         info = {}
         reward = 0
         done:bool = False
+        # action[0] = abs(action[0])
         self.load.append(action[0])
         self.demandCharge = max(self.load)
 
@@ -125,7 +125,8 @@ class SmartBuildingEnv(Env):
             print("-"*25, file=fileOut)
             
         
-        return np.array([0, observation]), reward, done, info
+        # return np.array([0, observation]), reward, done, info
+        return np.array([self.deltaUtilization, observation, self.timeWindow]), reward, done, info
     
     def render(self, mode="human"):
         screen_h = 600
@@ -166,19 +167,24 @@ class ChargingStationEnv(Env):
         # self.required = [1, 1, 0]
         self.load = []
         self.chargingDeadline = 2
-        self.required = 2
+        self.required = 1.5
         # self.chargingDeadline = len(self.required) - 1
         # self.chargingDeadline = len(self.required) - 1
         # print("Charging deadline: ", self.chargingDeadline, file=fileOut)
         # self.load = sum([l for l in self.required])
         # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
         # self.action_space = Box(low=0, high=self.required, shape=(1,), dtype=float)
-        self.action_space = Box(low=0, high=1, shape=(1,), dtype=float)
+        self.action_space = Box(low=-1, high=1, shape=(1,), dtype=float)
         # INCREASE OBSERVATION SPACE IF TRAIN LOSS CURVE IS UNIMPRESSIVE
-        self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
+        # self.observation_space = Box(low=np.array([-self.required, -self.chargingDeadline]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.required, self.required]), shape=(3,), dtype=float)
     
+    
+        # TRY CONVERTING DIST SPACE TO [0, 1] USING LOGISTIC FUNCTION 
+        # Gaussian to beta (uniform) transformation using CDF (but may not work for non-trivial)
         
-        return np.array([0,0])
+        
+        return np.array([0,0,0])
         # pass
         # return state
     
@@ -186,10 +192,9 @@ class ChargingStationEnv(Env):
         info = {}
         reward = 0
         done: bool = False
+        action[0] = abs(action[0])
         self.load.append(action[0])
-        # self.load = action[0]
         self.demandCharge = max(self.load)
-        # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
         
         
         print("EV stepping: ", round(self.load[self.timeStep], 2))
@@ -216,29 +221,32 @@ class ChargingStationEnv(Env):
             
         # observation = self.required[self.timeStep] 
         # observation = self.required - self.load[0]
-        observation = self.required - self.load[self.timeStep]
-        
+        # observation = self.required - self.load[self.timeStep]
+        observation = (self.required - sum([i for i in self.load]))
         
         print("Observation: ", round(observation, 2))
         print("-"*25)
         print("Observation: ", round(observation, 2), file=fileOut)
         print("-"*25, file=fileOut)
-
         
         # REWARD ONLY NEEDS TO MAKE SURE REQUIRED ENERGY IS CHARGED IN A FLAT ENERGY CHARGE DISTRIBUTION DUE TO PRICE FOR NOW
         # MEET DEADLINE BY REQUIRED CHARGING AMOUNT (REQUIRED -> TOTAL ENERGY)
         # CAN STOP AND RESTART MODEL PER 24 HOURS FOR NOW -> CONVOLUTION (SLIDING WINDOW)
         
+        toleranceWindowLow, toleranceWindowHigh = abs(self.required - .03),  abs(self.required + .03)
         
-        if self.timeStep == self.chargingDeadline and sum([i for i in self.load]) < self.required:
-            reward += 10
-            
+        if self.timeStep == self.chargingDeadline:
+            reward -= self.load[self.timeStep] + 12*(self.demandCharge) + 11*(abs(self.required - sum([i for i in self.load])))    
+            # reward -= self.load[self.timeStep] + 6*(self.demandCharge) + 5.5*(abs(self.required - sum([i for i in self.load])))    
+
         elif self.timeStep < self.chargingDeadline:
             reward -= self.load[self.timeStep]
-            
-        elif self.timeStep == self.chargingDeadline:
+        
+        elif self.timeStep == self.chargingDeadline and (sum([i for i in self.load]) > toleranceWindowLow and sum([i for i in self.load]) < toleranceWindowHigh):
             reward -= self.load[self.timeStep] + 2*(self.demandCharge)
             
+
+    
         #DOES NOT ACTUALLY CONVERGE BASED ON PREVIOUS EPOCH'S REWARD; 
         #   -> INSTEAD, REWARD IS TOO RANDOM AT BEGINNING OF EACH EPOCH SO THE 
         #       AGENT NEVER LEARNS THE PROPER POLICY
@@ -246,7 +254,7 @@ class ChargingStationEnv(Env):
         self.timeStep += 1
         self.totalReward += reward
         done = True if self.timeStep > self.chargingDeadline else done
-        # done = True if self.timeStep > self.required or sum([i for i in self.load]) == self.required else done
+        #done = True if self.timeStep > self.required or sum([i for i in self.load]) == self.required else done
         
         print("Total Reward: ", round(self.totalReward, 2))
         print("-"*25)
@@ -264,7 +272,8 @@ class ChargingStationEnv(Env):
             print("-"*25, file=fileOut)
             
         
-        return np.array([0, observation]), reward, done, info
+        # return np.array([0, observation]), reward, done, info
+        return np.array([self.timeStep, observation, self.required]), reward, done, info
     
     def render(self, mode="human"):
         screen_h = 600
