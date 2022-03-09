@@ -242,7 +242,9 @@ class ChargingStationEnv(Env):
         elif self.timeStep < self.chargingDeadline:
             reward -= self.load[self.timeStep]
         
-        elif self.timeStep == self.chargingDeadline and (sum([i for i in self.load]) > toleranceWindowLow and sum([i for i in self.load]) < toleranceWindowHigh):
+        elif self.timeStep == self.chargingDeadline \
+            and (sum([i for i in self.load]) > toleranceWindowLow \
+                and sum([i for i in self.load]) < toleranceWindowHigh):
             reward -= self.load[self.timeStep] + 2*(self.demandCharge)
             
 
