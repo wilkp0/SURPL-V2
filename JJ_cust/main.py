@@ -3,7 +3,7 @@ import custom_env
 from SBEV import SmartBuildingEnv, ChargingStationEnv
 import os, sys, glob, shutil, re, random, time
 from datetime import datetime
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DDPG
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -16,12 +16,13 @@ import numpy as np
 start = time.time()
 #------------------------------------------------------------
 now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust"
-resultsDir = sourceDir + "/results/"
-tbLogs = resultsDir + "/tb/"
+sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust/"
+resultsDir = sourceDir + "results/"
+tbLogs = resultsDir + "tb/"
 tfSBLogs = tbLogs + "SBlogs"
 tfEVLogs = tbLogs + "EVlogs"
-fileOut = open(sourceDir + "/results/PPO.txt", "w+")
+fileOut = open(resultsDir + "PPO.txt", "w+")
+# fileOut = open(sourceDir + "/results/DDPG.txt", "w+")
 
 if os.path.exists(tbLogs):
     # DIR NOT EMPTY
@@ -41,9 +42,9 @@ if os.path.exists(tbLogs):
 # env1 =  make_vec_env("SmartBuilding_single-v0", n_envs=1)
 # env2 =  make_vec_env("ChargingStation_single-v0", n_envs=1)
 
-# batch_size = 1000
+batch_size = 1000
 # ep_per_batch = 50 * batch_size
-batch_size = 2000
+# batch_size = 5
 ep_per_batch = 50 * batch_size
 
 print("Loading agents... ")
@@ -54,11 +55,13 @@ env1 = SmartBuildingEnv()
 env2 = ChargingStationEnv()
 
 print("Loading models...")
-model_SBE = PPO('MlpPolicy', env1, verbose = 1, tensorboard_log=tfSBLogs)
-model_CSE = PPO('MlpPolicy', env2, verbose = 1, tensorboard_log=tfEVLogs)
+model_SBE_PPO = PPO('MlpPolicy', env1, verbose = 1, tensorboard_log=tfSBLogs)
+model_CSE_PPO = PPO('MlpPolicy', env2, verbose = 1, tensorboard_log=tfEVLogs)
+# model_SBE_DDPG = DDPG('MlpPolicy', env1, verbose = 1, tensorboard_log=tfSBLogs)
+# model_CSE_DDPG = DDPG('MlpPolicy', env2, verbose = 1, tensorboard_log=tfEVLogs)
 
 print("Aggregating models...")
-models = [model_SBE, model_CSE]
+models = [model_SBE_PPO, model_CSE_PPO]
 envs = [env1, env2]
 
 # print("Checking envs...")
@@ -81,6 +84,7 @@ for model, env, nm in zip(models, envs, modelNames):
     
     time.sleep(7)
     model.save("results/PPO_" + nm)
+
     
     obs = env.reset() 
     for i in range(batch_size):
@@ -89,8 +93,13 @@ for model, env, nm in zip(models, envs, modelNames):
         # action = np.clip(action, env.action_space.low, env.action_space.high)
         
         obs, reward, done, info = env.step(action)
-        # if ep_per_batch % 2000 == 0:
-        # env.render()
+        
+        for i in range(ep_per_batch):        
+            if i % 2000 == 0:
+                env.render(ep=i)
+                time.sleep(3)
+                # env.close()
+                
         if done:
             obs = env.reset()
 # for model, env in zip(models, envs):
@@ -111,7 +120,7 @@ print("-"*25)
 print("-"*25, file=fileOut)
 print("-"*25, file=fileOut)
 print("Progran runtime: \n {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes), seconds))
-print("Progran runtime: \n {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes), seconds))
+print("Progran runtime: \n {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes), seconds), file=fileOut)
 
 fileOut.close()
 # env.close()

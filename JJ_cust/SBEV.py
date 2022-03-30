@@ -1,14 +1,18 @@
-from gym import Env
-from gym.spaces import Discrete, Box
-from gym.envs.classic_control import rendering
-from datetime import datetime
-import numpy as np
+# from gym import Env
+# from gym.spaces import Discrete, Box
+# from gym.envs.classic_control import rendering
+# from datetime import datetime
+# import numpy as np
+
+from auxFuncs import *
 
 # global golbalTime 
 
-# now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 sourceDir = "/Users/jordan/ThesisMARL/SURPL-V2/JJ_cust"
 fileOut = open(sourceDir + "/results/PPO.txt", "w+")
+figDir = sourceDir + "/plt_figs/"
+# fileOut = open(sourceDir + "/results/DDPG.txt", "w+")
 # fileOut = open(sourceDir + "/results/" + now + "/PPO", "w+")
 
 
@@ -22,11 +26,16 @@ class SmartBuildingEnv(Env):
         self.load = []
         self.demand = []
         # self.demandCharge = 2 * self.load
-        self.demanCharge = 0
+        self.demandCharge = 0
         self.timeStep = 0
         self.deltaUtilization = 0
         self.penalty = 0
         self.totalReward = 0
+        self.cost = 1
+        self.totalCost = 0
+        self.optimalCostList = []
+        self.totalCostList = []
+        self.totalOptimalCostList = []
         self.action_space = None
         self.observation_space = None
         self.reset()
@@ -37,16 +46,19 @@ class SmartBuildingEnv(Env):
         self.demand = [3, 1, 1]
         self.load = []
         self.timeWindow = 2
+        self.cost = 1
+        self.totalCost = 0
+        self.optimalCostList = []
         # self.timeWindow = len(self.demand) - 1
         self.timeStep = 0
         self.totalReward = 0
         # self.deltaUtilization = abs(self.demand[self.timeStep] - self.load[self.timeStep])
         self.deltaUtilization = 0
         self.penalty = (self.deltaUtilization) ** 2
-        self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype=float)
+        self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype="float32")
         # OBSERVATION SPACE CAN ALSO INCLUDE DEMAND CHARGE, TIME, ETC -> 1 INSUFFICIENT FOR MORE RESULTS
         # self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.deltaUtilization, self.timeWindow]), shape=(2,), dtype=float)
-        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, self.demand[self.timeStep], self.timeWindow]), shape=(3,), dtype=float)
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, self.demand[self.timeStep], self.timeWindow]), shape=(3,), dtype="float32")
         # return np.array(0)
         return np.array([0, 0, 0])
         # pass
@@ -105,7 +117,7 @@ class SmartBuildingEnv(Env):
             reward -= self.load[self.timeStep] + 1 + self.penalty
             
         # REWARD CAN BE DIFFERENCE BETWEEN COSTS
-
+        
         self.timeStep += 1
         self.totalReward += reward
         done = True if self.timeStep > 2 else done
@@ -117,6 +129,13 @@ class SmartBuildingEnv(Env):
         print("-"*25)
         print("-"*25)
         if done:
+            self.totalCost = sum([i * self.cost for i in self.load])
+            self.totalCostList.append(self.totalCost)
+            
+            self.optimalCostList = calculateSBOptimal(demand=self.demand)
+            self.optimalCostList = [i * self.cost for i in self.optimalCostList]
+            self.totalOptimalCostList.append(sum(self.optimalCostList))
+        
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2))
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2), file=fileOut)
             print("-"*25)
@@ -128,11 +147,59 @@ class SmartBuildingEnv(Env):
         # return np.array([0, observation]), reward, done, info
         return np.array([self.deltaUtilization, observation, self.timeWindow]), reward, done, info
     
-    def render(self, mode="human"):
+    # def render(self, mode="rgb_array"):
+    def render(self, ep, mode="human"):
         screen_h = 600
         screen_w = 1000
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h, "SB")
+            
+            # OPTIMAL, LOAD (NO ADJUSTMENTS/SCHEDULE), TOTAL
+            
+            fig = plt.figure(figsize = (15,7))
+            
+            tc = [range(len(self.totalOptimalCostList))]
+            tcc = np.reshape(tc, (len(self.totalOptimalCostList),))
+            
+            print(np.shape(tcc))
+            print(np.shape(self.totalOptimalCostList))
+            print(np.shape(self.totalCostList))
+            
+            # ------------------------------
+            #       PLOTS
+            # ------------------------------
+            
+            #x1, y1 -> OPTIMAL             
+            plt.plot(tcc, self.totalOptimalCostList, color="red", label="Optimal", linestyle="dashed")
+            
+            #x2, y2 -> TOTAL
+            plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid")
+            
+            #x3, y3 -> RL PERFORMANCE (LOAD)
+            plt.plot(tcc, self.totalCostList, color="magenta", label="Performance", linestyle="dotted")
+            
+            # ------------------------------
+            # ------------------------------
+            
+            labels =["Optimal, Total", "Performance"]
+            plt.ylabel = "Cost"
+            plt.xlabel = "Time (ep_per_batch % 2000 == 0)"
+            plt.title("SB Total Cost")
+            # plt.legend(labels)
+            plt.legend()
+            plt.show()
+            
+            fig.savefig(figDir + 'SB_' + now + '.png')
+            imgName = open(figDir + 'SB_' + now + '.png')
+            
+            img = rendering.Image(imgName, 1., 1.)
+            imgTrans = rendering.Transform()
+            img.add_attr(imgTrans)
+            
+            self.viewer.add_onetime(img)
+            
+            # print("Saved '" + figDir + "/SB" + now + ".png'.\n%s\n" % ("-"*50))
+            # print("Saved '" + figDir + "/SB" + now + ".png'.\n%s\n" % ("-"*50), file=fileOut)
             
         return self.viewer.render(return_rgb_array=mode == "rgb_array")
     
@@ -154,6 +221,8 @@ class ChargingStationEnv(Env):
         self.totalReward = 0
         self.chargingDeadline = 2
         self.demandCharge = 0
+        self.avgCost = 0
+        self.optimalCost = 0
         # self.time = 0
         # self.reward = 0
         self.action_space = None
@@ -164,6 +233,8 @@ class ChargingStationEnv(Env):
         # self.time = 0
         self.timeStep = 0
         self.totalReward = 0
+        self.avgCost = 0
+        self.optimalCost = 0
         # self.required = [1, 1, 0]
         self.load = []
         self.chargingDeadline = 2
@@ -174,10 +245,10 @@ class ChargingStationEnv(Env):
         # self.load = sum([l for l in self.required])
         # self.action_space = Box(low=0, high=self.required - sum([i for i in self.load]), shape=(1,), dtype=float)
         # self.action_space = Box(low=0, high=self.required, shape=(1,), dtype=float)
-        self.action_space = Box(low=-1, high=1, shape=(1,), dtype=float)
+        self.action_space = Box(low=-1, high=1, shape=(1,), dtype="float32")
         # INCREASE OBSERVATION SPACE IF TRAIN LOSS CURVE IS UNIMPRESSIVE
         # self.observation_space = Box(low=np.array([-self.required, -self.chargingDeadline]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
-        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.required, self.required]), shape=(3,), dtype=float)
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.required, self.required]), shape=(3,), dtype="float32")
     
     
         # TRY CONVERTING DIST SPACE TO [0, 1] USING LOGISTIC FUNCTION 
@@ -283,6 +354,7 @@ class ChargingStationEnv(Env):
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h, "EV")
             
+        # return self.viewer.render(return_rgb_array=mode == "human")
         return self.viewer.render(return_rgb_array=mode == "rgb_array")
     
     def close(self):
