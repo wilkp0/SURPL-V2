@@ -154,6 +154,8 @@ class SmartBuildingEnv(Env):
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h, "SB")
             
+            # Y -> OBJECTIVE FUNCTION
+            # NEED: COMFORT PENALTY, ENERGY COST 
             # OPTIMAL, LOAD (NO ADJUSTMENTS/SCHEDULE), TOTAL
             
             fig = plt.figure(figsize = (15,7))
@@ -170,13 +172,13 @@ class SmartBuildingEnv(Env):
             # ------------------------------
             
             #x1, y1 -> OPTIMAL             
-            plt.plot(tcc, self.totalOptimalCostList, color="red", label="Optimal", linestyle="dashed")
+            plt.plot(tcc, self.totalOptimalCostList, color="red", label="Optimal", linestyle="dashed", zorder=10)
             
             #x2, y2 -> TOTAL
-            plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid")
+            plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid", zorder=5)
             
             #x3, y3 -> RL PERFORMANCE (LOAD)
-            plt.plot(tcc, self.totalCostList, color="magenta", label="Performance", linestyle="dotted")
+            plt.plot(tcc, self.totalCostList, color="green", label="Performance", linestyle="dotted", zorder=0)
             
             # ------------------------------
             # ------------------------------
