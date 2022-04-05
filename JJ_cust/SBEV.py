@@ -33,9 +33,11 @@ class SmartBuildingEnv(Env):
         self.totalReward = 0
         self.cost = 1
         self.totalCost = 0
+        self.penaltyList =[]
         self.optimalCostList = []
         self.totalCostList = []
         self.totalOptimalCostList = []
+        self.totalperformanceList = []
         self.action_space = None
         self.observation_space = None
         self.reset()
@@ -48,7 +50,9 @@ class SmartBuildingEnv(Env):
         self.timeWindow = 2
         self.cost = 1
         self.totalCost = 0
+        self.penaltyList = []
         self.optimalCostList = []
+        self.performanceList = []
         # self.timeWindow = len(self.demand) - 1
         self.timeStep = 0
         self.totalReward = 0
@@ -92,7 +96,8 @@ class SmartBuildingEnv(Env):
 
         self.deltaUtilization = abs(self.demand[self.timeStep] - self.load[self.timeStep])
         self.penalty = (self.deltaUtilization) ** 2
-        
+        self.penaltyList.append(self.penalty)
+
         observation = self.demand[self.timeStep]
         
         print("Penalty: ", round(self.penalty, 2))
@@ -121,6 +126,7 @@ class SmartBuildingEnv(Env):
         self.timeStep += 1
         self.totalReward += reward
         done = True if self.timeStep > 2 else done
+        
         print("Total Reward: ", round(self.totalReward, 2))
         print("-"*25)
         print("Total Reward: ", round(self.totalReward, 2), file=fileOut)
@@ -128,13 +134,20 @@ class SmartBuildingEnv(Env):
         print("-"*25, file=fileOut)
         print("-"*25)
         print("-"*25)
+
         if done:
-            self.totalCost = sum([i * self.cost for i in self.load])
+            self.totalCost = sum([i * self.cost for i in self.load])+ sum(self.penaltyList) + 2*(max(self.load))
             self.totalCostList.append(self.totalCost)
-            
+
+            self.performanceList = calculatePerformanceSB(load = self.load)
+            self.totalperformanceList.append(sum(self.performanceList)+ 2*(max(self.performanceList)))
+
             self.optimalCostList = calculateSBOptimal(demand=self.demand)
-            self.optimalCostList = [i * self.cost for i in self.optimalCostList]
-            self.totalOptimalCostList.append(sum(self.optimalCostList))
+            SubtractionPenalty = np.subtract(self.demand,self.optimalCostList)
+            comfortPenalty = sum(i ** 2 for i in SubtractionPenalty)
+            self.optimalCostList = [i * self.cost for i in self.optimalCostList] 
+            self.totalOptimalCostList.append((sum(self.optimalCostList))+ 2*(max(self.optimalCostList)) + comfortPenalty)
+
         
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2))
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2), file=fileOut)
@@ -148,7 +161,7 @@ class SmartBuildingEnv(Env):
         return np.array([self.deltaUtilization, observation, self.timeWindow]), reward, done, info
     
     # def render(self, mode="rgb_array"):
-    def render(self, ep, mode="human"):
+    def render(self, mode="human"):
         screen_h = 600
         screen_w = 1000
         if self.viewer is None:
@@ -178,7 +191,7 @@ class SmartBuildingEnv(Env):
             plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid", zorder=5)
             
             #x3, y3 -> RL PERFORMANCE (LOAD)
-            plt.plot(tcc, self.totalCostList, color="green", label="Performance", linestyle="dotted", zorder=0)
+            plt.plot(tcc, self.totalperformanceList, color="green", label="Performance", linestyle="dotted", zorder=0)
             
             # ------------------------------
             # ------------------------------
@@ -189,16 +202,16 @@ class SmartBuildingEnv(Env):
             plt.title("SB Total Cost")
             # plt.legend(labels)
             plt.legend()
-            plt.show()
+            # plt.show()
             
             fig.savefig(figDir + 'SB_' + now + '.png')
             imgName = open(figDir + 'SB_' + now + '.png')
             
-            img = rendering.Image(imgName, 1., 1.)
-            imgTrans = rendering.Transform()
-            img.add_attr(imgTrans)
+            # img = rendering.Image(imgName, 1., 1.)
+            # imgTrans = rendering.Transform()
+            # img.add_attr(imgTrans)
             
-            self.viewer.add_onetime(img)
+            # self.viewer.add_onetime(img)
             
             # print("Saved '" + figDir + "/SB" + now + ".png'.\n%s\n" % ("-"*50))
             # print("Saved '" + figDir + "/SB" + now + ".png'.\n%s\n" % ("-"*50), file=fileOut)
@@ -221,10 +234,15 @@ class ChargingStationEnv(Env):
         self.required = 2
         self.timeStep = 0
         self.totalReward = 0
+        self.cost = 1
         self.chargingDeadline = 2
         self.demandCharge = 0
         self.avgCost = 0
         self.optimalCost = 0
+        self.optimalCostList = []
+        self.totalCostList = []
+        self.totalOptimalCostList = []
+        self.totalperformanceList = []   
         # self.time = 0
         # self.reward = 0
         self.action_space = None
@@ -235,12 +253,15 @@ class ChargingStationEnv(Env):
         # self.time = 0
         self.timeStep = 0
         self.totalReward = 0
+        self.cost = 1
         self.avgCost = 0
         self.optimalCost = 0
+        self.performanceList = []
+        self.optimalCostList = []    
         # self.required = [1, 1, 0]
         self.load = []
         self.chargingDeadline = 2
-        self.required = 1.5
+        self.required = 2
         # self.chargingDeadline = len(self.required) - 1
         # self.chargingDeadline = len(self.required) - 1
         # print("Charging deadline: ", self.chargingDeadline, file=fileOut)
@@ -338,7 +359,23 @@ class ChargingStationEnv(Env):
         print("-"*25, file=fileOut)
         print("-"*25)
         print("-"*25)
+        
         if done:
+
+            if sum([i for i in self.load]) < self.required: 
+                penalty = 1 * (self.required - sum([i for i in self.load])) 
+            else: penalty= 0
+            self.totalCost = sum([i * self.cost for i in self.load])+ 2*(max(self.load))+ penalty
+            self.totalCostList.append(self.totalCost)
+            self.optimalCostList = calculateEVOptimal(required=self.required)
+
+            self.performanceList = calculatePerformanceEV(required = self.required)
+            self.totalperformanceList.append(sum(self.performanceList)+2*(max(self.performanceList)))
+
+            self.optimalCostList = [i * self.cost for i in self.optimalCostList] 
+            self.totalOptimalCostList.append( (sum(self.optimalCostList))+ 2*(max(self.optimalCostList)))
+
+
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2))
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2), file=fileOut)
             print("-"*25)
@@ -355,6 +392,46 @@ class ChargingStationEnv(Env):
         screen_w = 1000
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_w, screen_h, "EV")
+            
+        # Y -> OBJECTIVE FUNCTION
+        # NEED: COMFORT PENALTY, ENERGY COST 
+        # OPTIMAL, LOAD (NO ADJUSTMENTS/SCHEDULE), TOTAL
+        
+        fig = plt.figure(figsize = (15,7))
+        
+        tc = [range(len(self.totalOptimalCostList))]
+        tcc = np.reshape(tc, (len(self.totalOptimalCostList),))
+        
+        print(np.shape(tcc))
+        print(np.shape(self.totalOptimalCostList))
+        print(np.shape(self.totalCostList))
+        
+        # ------------------------------
+        #       PLOTS
+        # ------------------------------
+        
+        #x1, y1 -> OPTIMAL             
+        plt.plot(tcc, self.totalOptimalCostList, color="red", label="Optimal", linestyle="dashed", zorder=10)
+        
+        #x2, y2 -> TOTAL
+        plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid", zorder=5)
+        
+        #x3, y3 -> RL PERFORMANCE (LOAD)
+        plt.plot(tcc, self.totalperformanceList, color="green", label="Performance", linestyle="dotted", zorder=0)
+        
+        # ------------------------------
+        # ------------------------------
+        
+        labels =["Optimal, Total", "Performance"]
+        plt.ylabel = "Cost"
+        plt.xlabel = "Time (ep_per_batch % 2000 == 0)"
+        plt.title("EV Total Cost")
+        # plt.legend(labels)
+        plt.legend()
+        # plt.show()
+        
+        fig.savefig(figDir + 'EV_' + now + '.png')
+        imgName = open(figDir + 'EV_' + now + '.png')
             
         # return self.viewer.render(return_rgb_array=mode == "human")
         return self.viewer.render(return_rgb_array=mode == "rgb_array")

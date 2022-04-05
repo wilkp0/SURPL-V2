@@ -54,13 +54,13 @@ def calculateSBOptimal(**kwargs):
 def calculateEVOptimal(**kwargs):
 
     ################# GLOBAL #################
-    timeStep = kwargs["timeStep"] if "timeStep" in kwargs else range(3)
+    required = kwargs["required"] if "required" in kwargs else 2
     ############ SCALAR VARIABLES ############
+    timeStep = range(3)
     load = cp.Variable(len(timeStep))
-    required = 2
-
+    
     ############## CALCULATIONS ###############
-    # print(required)
+    print(required)
     ################ SOLVER ##################
     # function = required - load 
     function = required - sum([i for i in load])
@@ -71,13 +71,34 @@ def calculateEVOptimal(**kwargs):
                 function >= 0]
 
     objective = cp.Minimize(cp.sum(function))
-
+    
     prob = cp.Problem(objective, constraints)
-
+    
     prob.solve()
+    
+    #print("Solution type: ", prob.status)
+    #print("-"*25)
+    #print("Minimized value: ", round(prob.value, 3))
+    #print("Optimal value: ", [round(i, 3) for i  in load.value])
+    #print("Demand Charge: ", round(max(load.value), 3))
+    
+    return [round(i,3) for i in load.value]
+    
+    
+def calculatePerformanceSB(**kwargs):
+    
+    demand = kwargs["demand"] if 'demand' in kwargs else [3,1,1]
 
-    print("Solution type: ", prob.status)
-    print("-"*25)
-    print("Minimized value: ", round(prob.value, 3))
-    print("Optimal value: ", [round(i, 3) for i  in load.value])
-    print("Demand Charge: ", round(max(load.value), 3))
+    return demand
+    
+    
+    
+def calculatePerformanceEV(**kwargs):
+    
+    required = kwargs["required"] if 'required' in kwargs else 2
+    
+    timeStep = required 
+    
+    requiredList = [(timeStep/required) for x in range(timeStep)]
+    
+    return requiredList
