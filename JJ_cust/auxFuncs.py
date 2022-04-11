@@ -6,6 +6,7 @@ import numpy as np
 import cvxpy as cp
 from matplotlib import pyplot as plt
 import matplotlib
+import random
 matplotlib.use("Qt5Agg")
 
 # ------------------------------
@@ -97,8 +98,9 @@ def calculatePerformanceEV(**kwargs):
     
     required = kwargs["required"] if 'required' in kwargs else 2
     
-    timeStep = required 
+    timeStep = int(required)
     
     requiredList = [(timeStep/required) for x in range(timeStep)]
+    # requiredList = [(timeStep/required) for x in range(timeStep)]
     
     return requiredList

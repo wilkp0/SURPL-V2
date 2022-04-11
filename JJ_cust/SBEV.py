@@ -24,6 +24,11 @@ class SmartBuildingEnv(Env):
     def __init__(self):
         self.viewer = None
         self.load = []
+        
+        self.iter = 0
+        self.newDemand =[3, 1, 1]
+        self.shuffleDemand = [3, 1, 1]
+        
         self.demand = []
         # self.demandCharge = 2 * self.load
         self.demandCharge = 0
@@ -45,7 +50,9 @@ class SmartBuildingEnv(Env):
     def reset(self):
         # self.load = 0
         # MOVE TO 24 HOURS FOR INITAL RESULTS NOW THAT PRELIM RESULTS ESTABLISHED
-        self.demand = [3, 1, 1]
+        # self.demand = [3, 1, 1]
+        self.demand = self.newDemand
+        self.resetDemand = self.shuffleDemand
         self.load = []
         self.timeWindow = 2
         self.cost = 1
@@ -59,10 +66,12 @@ class SmartBuildingEnv(Env):
         # self.deltaUtilization = abs(self.demand[self.timeStep] - self.load[self.timeStep])
         self.deltaUtilization = 0
         self.penalty = (self.deltaUtilization) ** 2
-        self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype="float32")
+        # self.action_space = Box(low=0, high=self.demand[self.timeStep], shape=(1,), dtype="float32")
+        self.action_space = Box(low=0, high=4, shape=(1,), dtype="float32")
         # OBSERVATION SPACE CAN ALSO INCLUDE DEMAND CHARGE, TIME, ETC -> 1 INSUFFICIENT FOR MORE RESULTS
         # self.observation_space = Box(low=np.array([0, 0]), high=np.array([self.deltaUtilization, self.timeWindow]), shape=(2,), dtype=float)
-        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, self.demand[self.timeStep], self.timeWindow]), shape=(3,), dtype="float32")
+        # self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, self.demand[self.timeStep], self.timeWindow]), shape=(3,), dtype="float32")
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.deltaUtilization, 4, self.timeWindow]), shape=(3,), dtype="float32")
         # return np.array(0)
         return np.array([0, 0, 0])
         # pass
@@ -147,6 +156,14 @@ class SmartBuildingEnv(Env):
             comfortPenalty = sum(i ** 2 for i in SubtractionPenalty)
             self.optimalCostList = [i * self.cost for i in self.optimalCostList] 
             self.totalOptimalCostList.append((sum(self.optimalCostList))+ 2*(max(self.optimalCostList)) + comfortPenalty)
+            
+            self.iter +=1
+            if self.iter % 101 ==0:
+                self.newDemand =  random.randrange(-1,2) * np.round(np.random.rand(3),3) + self.resetDemand
+            elif self.iter % 1000 == 0: 
+                shuffle = np.array(self.resetDemand)
+                np.random.shuffle(shuffle)
+                self.shuffleDemand = shuffle
 
         
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2))
@@ -232,10 +249,13 @@ class ChargingStationEnv(Env):
         self.load = []
         # self.required = []
         self.required = 2
+        self.iter = 0
         self.timeStep = 0
         self.totalReward = 0
         self.cost = 1
         self.chargingDeadline = 2
+        self.newRequired = 2
+        self.resetRequired = 2
         self.demandCharge = 0
         self.avgCost = 0
         self.optimalCost = 0
@@ -261,7 +281,8 @@ class ChargingStationEnv(Env):
         # self.required = [1, 1, 0]
         self.load = []
         self.chargingDeadline = 2
-        self.required = 2
+        self.required = self.newRequired
+        # self.required = 2
         # self.chargingDeadline = len(self.required) - 1
         # self.chargingDeadline = len(self.required) - 1
         # print("Charging deadline: ", self.chargingDeadline, file=fileOut)
@@ -270,8 +291,9 @@ class ChargingStationEnv(Env):
         # self.action_space = Box(low=0, high=self.required, shape=(1,), dtype=float)
         self.action_space = Box(low=-1, high=1, shape=(1,), dtype="float32")
         # INCREASE OBSERVATION SPACE IF TRAIN LOSS CURVE IS UNIMPRESSIVE
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.resetRequired, self.resetRequired]), shape=(3,), dtype="float32")
+        # self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.required, self.required]), shape=(3,), dtype="float32")
         # self.observation_space = Box(low=np.array([-self.required, -self.chargingDeadline]), high=np.array([self.required, self.chargingDeadline]), shape=(2,), dtype=float)
-        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([self.chargingDeadline, self.required, self.required]), shape=(3,), dtype="float32")
     
     
         # TRY CONVERTING DIST SPACE TO [0, 1] USING LOGISTIC FUNCTION 
@@ -363,7 +385,7 @@ class ChargingStationEnv(Env):
         if done:
 
             if sum([i for i in self.load]) < self.required: 
-                penalty = 1 * (self.required - sum([i for i in self.load])) 
+                penalty = 2.25 * (self.required - sum([i for i in self.load])) 
             else: penalty= 0
             self.totalCost = sum([i * self.cost for i in self.load])+ 2*(max(self.load))+ penalty
             self.totalCostList.append(self.totalCost)
@@ -374,6 +396,11 @@ class ChargingStationEnv(Env):
 
             self.optimalCostList = [i * self.cost for i in self.optimalCostList] 
             self.totalOptimalCostList.append( (sum(self.optimalCostList))+ 2*(max(self.optimalCostList)))
+            
+            self.iter +=1
+            if self.iter % 200 == 0:
+                self.newRequired = random.randrange(-1,2) * round(random.random(),3) + self.resetRequired
+ 
 
 
             print("DONE: \nLoad: ", [round(i, 2) for i in self.load], "\nTotal Reward: ", round(self.totalReward, 2))
@@ -417,7 +444,7 @@ class ChargingStationEnv(Env):
         plt.plot(tcc, self.totalCostList, color="blue", label="Calculated", linestyle="solid", zorder=5)
         
         #x3, y3 -> RL PERFORMANCE (LOAD)
-        plt.plot(tcc, self.totalperformanceList, color="green", label="Performance", linestyle="dotted", zorder=0)
+        # plt.plot(tcc, self.totalperformanceList, color="green", label="Performance", linestyle="dotted", zorder=0)
         
         # ------------------------------
         # ------------------------------

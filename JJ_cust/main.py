@@ -49,7 +49,7 @@ if os.path.exists(tbLogs):
 # env1 =  make_vec_env("SmartBuilding_single-v0", n_envs=1)
 # env2 =  make_vec_env("ChargingStation_single-v0", n_envs=1)
 
-batch_size = 10
+batch_size = 100
 # ep_per_batch = 50 * batch_size
 # batch_size = 5
 ep_per_batch = 50 * batch_size
@@ -101,11 +101,11 @@ for model, env, nm in zip(models, envs, modelNames):
         
         obs, reward, done, info = env.step(action)
         
-        for i in range(ep_per_batch):        
-            if i % 2000 == 0:
-                env.render()
-                time.sleep(3)
-                env.close()
+        # for i in range(ep_per_batch):        
+        #     if i % 4000 == 0:
+        env.render()
+                # time.sleep(3)
+                # env.close()
                 
         if done:
             obs = env.reset()
