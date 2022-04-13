@@ -399,7 +399,7 @@ class ChargingStationEnv(Env):
             
             self.iter +=1
             if self.iter % 200 == 0:
-                self.newRequired = random.randrange(-1,2) * round(random.random(),3) + self.resetRequired
+                self.newRequired = random.randrange(-1, 2) * round(random.random(),3) + self.resetRequired
  
 
 
