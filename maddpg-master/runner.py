@@ -138,3 +138,8 @@ class Runner:
         print('Returns is', rewards)
         self.env.reset()
         return sum(returns) / self.args.evaluate_episodes
+
+
+# Train plot
+# After training, evaluate the model (compare actions trained agent vs optimal solutions)
+# Computing agent.reward : parallel vs serial (possibly - multithreading for concurrency)
