@@ -48,7 +48,6 @@ class Runner:
             #self.env.render()
             # reset the environment
             self.episode_limit = 3
-            
 
             if time_step % self.episode_limit == 0:
                 s = self.env.reset()
