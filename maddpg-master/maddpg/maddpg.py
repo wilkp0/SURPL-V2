@@ -4,6 +4,8 @@ from maddpg.actor_critic import Actor, Critic
 
 
 class MADDPG:
+                                        #Because the obs and act dimensions of different agents may be different, so the neural networks are different and need agent_id to distinguishBecause the obs and act dimensions of different agents may be different, 
+                                        # so the neural networks are different and need agent_id to distinguish
     def __init__(self, args, agent_id):  # 因为不同的agent的obs、act维度可能不一样，所以神经网络不同,需要agent_id来区分
         self.args = args
         self.agent_id = agent_id
@@ -57,8 +59,8 @@ class MADDPG:
     def train(self, transitions, other_agents):
         for key in transitions.keys():
             transitions[key] = torch.tensor(transitions[key], dtype=torch.float32)
-        r = transitions['r_%d' % self.agent_id]  # 训练时只需要自己的reward
-        o, u, o_next = [], [], []  # 用来装每个agent经验中的各项
+        r = transitions['r_%d' % self.agent_id]  # 训练时只需要自己的reward     #You only need your own reward when training
+        o, u, o_next = [], [], []  # 用来装每个agent经验中的各项                #Used to hold items in each agent's experience
         for agent_id in range(self.args.n_agents):
             o.append(transitions['o_%d' % agent_id])
             u.append(transitions['u_%d' % agent_id])
@@ -68,12 +70,15 @@ class MADDPG:
         u_next = []
         with torch.no_grad():
             # 得到下一个状态对应的动作
+            # Get the action corresponding to the next state
             index = 0
             for agent_id in range(self.args.n_agents):
                 if agent_id == self.agent_id:
                     u_next.append(self.actor_target_network(o_next[agent_id]))
                 else:
                     # 因为传入的other_agents要比总数少一个，可能中间某个agent是当前agent，不能遍历去选择动作
+                    # Because the incoming other_agents is one less than the total number, 
+                    # maybe one of the agents in the middle is the current agent and cannot be traversed to select an action
                     u_next.append(other_agents[index].policy.actor_target_network(o_next[agent_id]))
                     index += 1
             q_next = self.critic_target_network(o_next, u_next).detach()
@@ -86,6 +91,7 @@ class MADDPG:
 
         # the actor loss
         # 重新选择联合动作中当前agent的动作，其他agent的动作不变
+        # Reselect the action of the current agent in the joint action, and the actions of other agents remain unchanged
         u[self.agent_id] = self.actor_network(o[self.agent_id])
         actor_loss = - self.critic_network(o, u).mean()
         # if self.agent_id == 0:

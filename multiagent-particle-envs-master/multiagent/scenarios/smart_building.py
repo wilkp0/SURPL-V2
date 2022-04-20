@@ -19,6 +19,7 @@ class Scenario(BaseScenario):
         #used for plotting actions done by policy. 
         #Future work: implementing it so that it can work with any number of input dimensions and entities
         world.actions = [[],[]]
+        energyList1, energyList2 = [], []
 
         num_agents = 2
         world.num_agents = num_agents
@@ -75,8 +76,8 @@ class Scenario(BaseScenario):
     def reward(self, agent, world):
         reward = 0
 
-
         if agent.name == "SB1":
+            self.energyList1 = agent.energyList 
             reward = self.smart_building_reward(agent, world)
             print("SB1 reward: ", reward, file=fileOut)
             '''
@@ -85,6 +86,7 @@ class Scenario(BaseScenario):
             self.reward 
             '''
         elif agent.name == "SB2":
+            self.energyList2 = agent.energyList
             reward = self.smart_building_reward(agent, world)
             print("SB2 reward: ", reward, file=fileOut)
             print("*"*25, file=fileOut)
@@ -101,7 +103,7 @@ class Scenario(BaseScenario):
             return reward
         elif(self.day_reward == True and world.time-1 == 2):
             self.total_reward += reward
-            tmp = self.total_reward
+            tmp = self.total_reward            
             return tmp
         else:
             self.total_reward += reward
@@ -123,7 +125,10 @@ class Scenario(BaseScenario):
         agent.energyList.append((agent.action.c[0] * agent.demands[world.time-1]))
         print("Energy list 1: ", agent.energyList, "\n") if agent.name == "SB1" else print("Energy list 2: ", agent.energyList, "\n")
         
-        agent.demandCharge = max(agent.energyList)
+        # reward = SB1energy + SB2energy + comfortSB1 + comfortSB2 + DemandCharge.Max(SB1energy,SB2enregy)
+               
+        # agent.demandCharge = np.maximum(energyList1, energyList2)
+        agent.demandCharge = np.maximum(energyList1, energyList2)
         self.deltaUtilization = abs(agent.demands[world.time -1] - agent.energyList[world.time -1])
         self.comfort = (self.deltaUtilization) ** 2
         
@@ -131,6 +136,7 @@ class Scenario(BaseScenario):
 
         if world.time == world.timeWindow:
             # print("1", file=fileOut)
+            # reward -= agent.energyList[world.time-1] + self.comfort 
             reward -= agent.energyList[world.time-1] + self.comfort + 2*(agent.demandCharge)
         # IF HAVEN'T REACHED END OF SIMULATION YET
         elif world.time < world.timeWindow and agent.energyList[world.time-1] != 0:
