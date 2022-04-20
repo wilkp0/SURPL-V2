@@ -143,3 +143,5 @@ class Runner:
 # Train plot
 # After training, evaluate the model (compare actions trained agent vs optimal solutions)
 # Computing agent.reward : parallel vs serial (possibly - multithreading for concurrency)
+# Generate MADDPG results and demonstrate discussed performance (train/loss & train/accuracy)
+# Compare against baseline (optimal)
