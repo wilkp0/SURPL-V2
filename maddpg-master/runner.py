@@ -2,6 +2,7 @@ from time import time
 from tqdm import tqdm
 from agent import Agent
 from common.replay_buffer import Buffer
+from torch.utils.tensorboard import SummaryWriter
 import torch
 import os
 import numpy as np
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 
 class Runner:
     def __init__(self, args, env):
-        self.args = args
+        self.args = args        
         self.noise = args.noise_rate
         self.epsilon = args.epsilon
         self.episode_limit = args.max_episode_len
@@ -23,11 +24,13 @@ class Runner:
         # print(os.getcwd())
         # self.save_path = self.args.save_dir + '/' + self.args.scenario_name
         # DYNAMIC DAY
-        now = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        now = datetime.now().strftime("%m/%d/%Y_%H:%M:%S")
         
         self.save_path = "/Users/jordan/ThesisMARL/SURPL-V2/results/" + now + "/" + self.args.scenario_name
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
+            
+        self.writer = SummaryWriter(log_dir=self.save_path)
 
     def _init_agents(self):
         agents = []
@@ -129,6 +132,10 @@ class Runner:
                 rewards += r[0]
                 s = s_next
             returns.append(rewards)
+            self.writer.add_scalar("Loss/train", sum(returns), episode)
+            # self.writer.add_scalar("Loss/test", sum(returns), episode)
+            # self.writer.add_scalar("Accuracy/train", sum(returns), episode)
+            # self.writer.add_scalar("Accuracy/test", sum(returns), episode)
         print('Returns is', rewards)
         self.env.reset()
         return sum(returns) / self.args.evaluate_episodes
